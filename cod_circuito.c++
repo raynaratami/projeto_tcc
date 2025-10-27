@@ -1,5 +1,7 @@
 #include <LiquidCrystal_I2C.h>
+#include <Adafruit_Sensor.h>
 #include <Wire.h>
+#include <DHT.h>  // Incluir a biblioteca DHT
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
@@ -8,13 +10,16 @@ const int pHPIN = A0;
 const int tempPIN = A1;
 const int lumiPIN = A2;
 
-//Atuadores
+// Sensor DHT11
+#define DHTPIN A3         // Pino onde o DHT11 está conectado
+#define DHTTYPE DHT11    // Definir tipo de sensor (DHT11)
+DHT dht(DHTPIN, DHTTYPE); // Inicializar o sensor DHT
+
+// Atuadores
 const int buzzerPin = 8;
+const int relePin = 7;  // Relé da bomba
 
-// Relé da bomba
-const int relePin = 7;     
-
-//LED RGB
+// LED RGB
 const int redPin = 9;
 const int greenPin = 10;
 const int bluePin = 11;
@@ -41,7 +46,9 @@ void setup() {
   pinMode(botaoSilenciarPin, INPUT_PULLUP);
 
   digitalWrite(buzzerPin, LOW);
-  digitalWrite(relePin, HIGH);  // Bomba ligada sempre
+  digitalWrite(relePin, LOW);  // Bomba ligada sempre
+
+  dht.begin();  // Inicializar o sensor DHT11
 }
 
 void loop() {
@@ -57,6 +64,10 @@ void loop() {
   int valorLuz = analogRead(lumiPIN);
   float porcentagemLuz = (valorLuz / 1023.0) * 100;
 
+  // Leitura do DHT11 (Temperatura e Umidade)
+  float tempDHT = dht.readTemperature();  // Temperatura em °C
+  float umidadeDHT = dht.readHumidity();  // Umidade em %
+
   // Exibir no Serial Monitor
   Serial.print("pH: ");
   Serial.println(pH);
@@ -65,6 +76,13 @@ void loop() {
   Serial.println(" C");
   Serial.print("Luminosidade: ");
   Serial.print(porcentagemLuz);
+  Serial.println("%");
+
+  Serial.print("Temperatura DHT11: ");
+  Serial.print(tempDHT);
+  Serial.println(" C");
+  Serial.print("Umidade DHT11: ");
+  Serial.print(umidadeDHT);
   Serial.println("%");
 
   // Mostrar no LCD
@@ -104,36 +122,36 @@ void loop() {
   if (estadoCritico) {
     // Pisca vermelho
     digitalWrite(redPin, HIGH);
-      digitalWrite(greenPin, LOW);
-      digitalWrite(bluePin, LOW);
-      digitalWrite(buzzerPin, HIGH);
-      delay(200);
+    digitalWrite(greenPin, LOW);
+    digitalWrite(bluePin, LOW);
+    digitalWrite(buzzerPin, HIGH);
+    delay(200);
 
-  // Pisca azul
-      digitalWrite(redPin, LOW);
-      digitalWrite(greenPin, LOW);
-      digitalWrite(bluePin, HIGH);
-      digitalWrite(buzzerPin, LOW);
-      delay(200);
+    // Pisca azul
+    digitalWrite(redPin, LOW);
+    digitalWrite(greenPin, LOW);
+    digitalWrite(bluePin, HIGH);
+    digitalWrite(buzzerPin, LOW);
+    delay(200);
 
-   // Pisca verde
-      digitalWrite(redPin, LOW);
-      digitalWrite(greenPin, HIGH);
-      digitalWrite(bluePin, LOW);
-      digitalWrite(buzzerPin, HIGH);
-      delay(200);
+    // Pisca verde
+    digitalWrite(redPin, LOW);
+    digitalWrite(greenPin, HIGH);
+    digitalWrite(bluePin, LOW);
+    digitalWrite(buzzerPin, HIGH);
+    delay(200);
 
-      // Pisca roxo (vermelho + azul)
-      digitalWrite(redPin, HIGH);
-      digitalWrite(greenPin, LOW);
-      digitalWrite(bluePin, HIGH);
-      digitalWrite(buzzerPin, LOW);
-      delay(200);
+    // Pisca roxo (vermelho + azul)
+    digitalWrite(redPin, HIGH);
+    digitalWrite(greenPin, LOW);
+    digitalWrite(bluePin, HIGH);
+    digitalWrite(buzzerPin, LOW);
+    delay(200);
 
-      //Vermelho aceso
-      digitalWrite(redPin, HIGH);
-      digitalWrite(greenPin, LOW);
-      digitalWrite(bluePin, LOW);
+    // Vermelho aceso
+    digitalWrite(redPin, HIGH);
+    digitalWrite(greenPin, LOW);
+    digitalWrite(bluePin, LOW);
 
     if (!buzzerSilenciado) {
       digitalWrite(buzzerPin, HIGH);
